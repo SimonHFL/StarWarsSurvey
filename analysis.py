@@ -208,7 +208,6 @@ star_wars_test = star_wars[-200:]
 
 from sklearn import cross_validation
 from sklearn.ensemble import RandomForestClassifier
-import matplotlib.pyplot as plt
 
 predictors = ["SeenSW", "IsStarTrekFan", "Gender", "Age", "Income", "Education", "Location"]
 
@@ -224,60 +223,23 @@ alg = RandomForestClassifier(random_state=1, n_estimators=10, min_samples_split=
 alg.fit(star_wars_train[predictors], star_wars_train["IsStarWarsFan"])
 # Predict using the test dataset.  We have to convert all the columns to floats to avoid an error.
 predictions = alg.predict_proba(star_wars_test[predictors].astype(float))[:,1]
-print(predictions)
+
+predictions[predictions > 0.5] = 1
+predictions[predictions <= 0.5] = 0
+
+predictions = predictions.astype(int)
+
+submission = pd.DataFrame({
+        "Id": star_wars_test["RespondentID"],
+        "IsStarWarsFan": predictions
+    })
+
+print(submission.head(10))
 
 
 scores = cross_validation.cross_val_score(alg, star_wars[predictors], star_wars['IsStarWarsFan'], cv=3)
 
 print(scores.mean())
-
-
-
-
-
-
-
-"""
-
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn import datasets, linear_model
-
-# Split into data and target columns
-star_wars_data = star_wars.drop('IsStarWarsFan', 1)
-star_wars_target = star_wars['IsStarWarsFan']
-
-# Split into train and test data
-star_wars_X_train = star_wars_data[:-200]
-star_wars_X_test = star_wars_data[-200:]
-
-star_wars_y_train = star_wars_target[:-200]
-star_wars_y_test = star_wars_target[-200:]
-
-# Create linear regression object
-regr = linear_model.LinearRegression()
-
-# Train the model using the training sets
-regr.fit(star_wars_X_train, star_wars_y_train)
-
-# The coefficients
-print('Coefficients: \n', regr.coef_)
-# The mean square error
-print("Residual sum of squares: %.2f"
-      % np.mean((regr.predict(star_wars_X_test) - star_wars_y_test) ** 2))
-# Explained variance score: 1 is perfect prediction
-print('Variance score: %.2f' % regr.score(star_wars_X_test, star_wars_y_test))
-
-# Plot outputs
-plt.scatter(star_wars_X_test, star_wars_y_test,  color='black')
-plt.plot(star_wars_X_test, regr.predict(star_wars_X_test), color='blue',
-         linewidth=3)
-
-plt.xticks(())
-plt.yticks(())
-
-plt.show()
-"""
 
 
 
